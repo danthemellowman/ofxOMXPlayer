@@ -8,7 +8,7 @@ void testApp::setup()
 	ofSetLogLevel("ofThread", OF_LOG_ERROR);
 		
 	
-	string videoPath = ofToDataPath("../../../video/Timecoded_Big_bunny_1.mov", true);
+	string videoPath = ofToDataPath("../../../video/video.mp4", true);
 
 	
 	ofDirectory currentVideoDirectory(ofToDataPath("/home/pi/videos/current", true));

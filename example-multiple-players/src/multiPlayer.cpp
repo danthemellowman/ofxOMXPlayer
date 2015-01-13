@@ -12,8 +12,9 @@ void multiPlayer::setup()
 	{
 		currentVideoDirectory.listDir();
 		vector<ofFile> files = currentVideoDirectory.getFiles();
-		
-		
+
+		float x = 0;
+		float y = 0;
 		for (int i=0; i<files.size(); i++) 
 		{
 			ofxOMXPlayerSettings settings;
@@ -30,10 +31,14 @@ void multiPlayer::setup()
 				 */
 				settings.displayRect.width = 400;
 				settings.displayRect.height = 300;
-				settings.displayRect.x = 40+(400*i);
-				settings.displayRect.y = 200;
+				settings.displayRect.x = x;
+				settings.displayRect.y = y;
+				x+=400;
+				if(x+400 > ofGetScreenWidth()){
+					x = 0;
+					y+=300;
+				}
 			}
-			
 			ofxOMXPlayer* player = new ofxOMXPlayer();
 			player->setup(settings);
 			omxPlayers.push_back(player);
@@ -53,14 +58,14 @@ void multiPlayer::update()
 
 //--------------------------------------------------------------
 void multiPlayer::draw(){
-	ofBackgroundGradient(ofColor::red, ofColor::black, OF_GRADIENT_BAR);
+	float y = 0;
 	for (int i=0; i<omxPlayers.size(); i++) 
 	{
 		ofxOMXPlayer* player = omxPlayers[i];
 		if (player->isPlaying()) 
-		{
+		{	
 			ofPushMatrix();
-				ofTranslate(player->settings.displayRect.x, 0, 0);
+				ofTranslate(player->settings.displayRect.x, player->settings.displayRect.y, 0);
 				ofDrawBitmapStringHighlight(player->getInfo(), 60, 60, ofColor(ofColor::black, 90), ofColor::yellow);
 			ofPopMatrix();
 		}		

@@ -64,7 +64,7 @@ class ofxOMXPlayer
 		string getInfo();
 	
 	private:
-
+		bool openEngine();
 		bool openEngine(int startTimeInSeconds = 0);
 		void addExitHandler();
 		void onUpdateDuringExit(ofEventArgs& args);

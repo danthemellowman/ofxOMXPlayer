@@ -253,8 +253,54 @@ bool ofxOMXPlayer::setup(ofxOMXPlayerSettings settings)
 	return openEngine();
 }
 
+bool ofxOMXPlayer::openEngine()
+{
+    unsigned long long startTime = ofGetElapsedTimeMillis();
+	if (engine)
+	{
+		delete engine;
+		engine = NULL;
+	}
+    unsigned long long endTime = ofGetElapsedTimeMillis();
+    ofLogNotice(__func__) << "DELETE TOOK " << endTime-startTime <<  " MS";
+	
+    
+    startTime = ofGetElapsedTimeMillis();
+    
+	engine = new ofxOMXPlayerEngine();
+	bool setupPassed = engine->setup(settings);
+    
+    endTime = ofGetElapsedTimeMillis();
+    ofLogNotice(__func__) << "setup TOOK " << endTime-startTime <<  " MS";
+    
+	if (setupPassed)
+	{
+		settings = engine->omxPlayerSettings;
 
-bool ofxOMXPlayer::openEngine(int startTimeInSeconds)//default 0
+		if (settings.enableTexture)
+		{
+			isTextureEnabled = settings.enableTexture;
+            generateEGLImage(settings.videoWidth, settings.videoHeight);
+			engine->eglImage = eglImage;
+		}
+		else
+		{
+			videoWidth	= settings.videoWidth;
+			videoHeight = settings.videoHeight;
+		}
+
+		engine->openPlayer(0);
+	}
+	else
+	{
+		ofLogError(__func__) << "engine->setup FAIL";
+	}
+	isOpen = setupPassed;
+	return setupPassed;
+}
+
+
+void ofxOMXPlayer::openEngine(int startTimeInSeconds)//default 0
 {
     unsigned long long startTime = ofGetElapsedTimeMillis();
 	if (engine)
@@ -297,8 +343,7 @@ bool ofxOMXPlayer::openEngine(int startTimeInSeconds)//default 0
 		ofLogError(__func__) << "engine->setup FAIL";
 	}
 	isOpen = setupPassed;
-	return setupPassed;
-
+	//return setupPassed;
 }
 
 void ofxOMXPlayer::togglePause()
