@@ -12,7 +12,7 @@ void testApp::setup()
 	string videoPath;
 	//omxPlayers.resize(2);
 	//for(int h = 0; h < omxPlayers.size(); h++){
-	for(int i = 0; i < 3 ; i++){
+	for(int i = 0; i < 4 ; i++){
 		//if(i%2==0){
 			videoPath = ofToDataPath("../../../video/video.mp4", true);
 		//}else{
