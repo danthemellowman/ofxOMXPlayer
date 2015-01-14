@@ -154,31 +154,40 @@ void testApp::draw()
 		ping.begin();
 		ofClear(0, 0, 0, 0);
 		ofSetColor(255, 255, 255, fade);
-		omxPlayers[filmIndex]->draw(0, 0, 480, 280);
+		ofPushMatrix();
+		ofScale(ping.getWidth()/omxPlayers[filmIndex]->getWidth(), ping.getHeight()/omxPlayers[filmIndex]->getHeight());
+		omxPlayers[filmIndex]->draw(0, 0, omxPlayers[filmIndex]->getWidth(), omxPlayers[filmIndex]->getHeight());
+		ofPopMatrix();
 		ping.end();
 		ofPopStyle();
 	}
 
-	if(omxPlayers[pfilmIndex]->isFrameNew()){
-		ofPushStyle();
-		pong.begin();
-		ofClear(0, 0, 0, 0);
-		ofSetColor(255, 255, 255, 255-fade);
-		omxPlayers[pfilmIndex]->draw(0, 0, 480, 280);
-		pong.end();
-		ofPopStyle();
-	}
+	// if(omxPlayers[pfilmIndex]->isFrameNew()){
+	// 	ofPushStyle();
+	// 	pong.begin();
+	// 	ofClear(0, 0, 0, 0);
+	// 	ofSetColor(255, 255, 255, 255-fade);
+	// 	omxPlayers[pfilmIndex]->draw(0, 0, 480, 280);
+	// 	pong.end();
+	// 	ofPopStyle();
+	// }
 
-
+	//if(filmIndex == nextIndex){
 	ofPushStyle();
+	ofPushMatrix();
+	ofScale((float)ofGetWindowWidth()/ping.getWidth(), (float)ofGetWindowHeight()/ping.getHeight());
 	ofSetColor(255, 255, 255, fade);
-	ping.draw(0, 0);
+	ping.draw(0, 0, 480, 272);
+	ofPopMatrix();
 	ofPopStyle();
+	//}
 
-	ofPushStyle();
-	ofSetColor(255, 255, 255, 255-fade);
-	ping.draw(0, 0);
-	ofPopStyle();
+	// if(nextIndex!=filmIndex && fade > 0){
+	// 	ofPushStyle();
+	// 	ofSetColor(255, 255, 255, 255-fade);
+	// 	pong.draw(0, 0);
+	// 	ofPopStyle();
+	// }
 
 	ofDrawBitmapStringHighlight("film index:"+ofToString(filmIndex)+" doFade: "+ofToString(doFade)+" fadeUp: "+ofToString(fadeUp), 60, 30, ofColor(ofColor::black, 90), ofColor::yellow);
 	ofDrawBitmapStringHighlight("startFrame: "+ofToString(startFrame[filmIndex])+" endFrame: "+ofToString(endFrame[filmIndex]), 60, 60, ofColor(ofColor::black, 90), ofColor::yellow);
@@ -192,9 +201,11 @@ void testApp::keyPressed(int key)
 	{
 		pfilmIndex = filmIndex;
 		nextIndex = filmIndex+1;
+
     	if(nextIndex >= omxPlayers.size()){
     		nextIndex = 0;
     	}
+
     	newMovie = true;
     	doFade = true;
     	fadeUp = false;
@@ -202,7 +213,6 @@ void testApp::keyPressed(int key)
     }
     if (key == '-') 
 	{
-		pfilmIndex = filmIndex;
     	nextIndex = filmIndex-1;
     	if(nextIndex <=0){
     		nextIndex = omxPlayers.size()-1;

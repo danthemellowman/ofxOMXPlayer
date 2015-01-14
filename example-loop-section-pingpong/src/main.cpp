@@ -5,6 +5,6 @@
 int main()
 {
 	ofSetCurrentRenderer(ofGLProgrammableRenderer::TYPE);
-	ofSetupOpenGL(1280, 720, OF_WINDOW);
+	ofSetupOpenGL(720, 480, OF_WINDOW);
 	ofRunApp( new testApp());
 }
