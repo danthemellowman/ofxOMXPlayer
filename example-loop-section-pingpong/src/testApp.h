@@ -12,33 +12,34 @@ public:
 	void update();
 	void draw();
 	void keyPressed(int key);	
-	map<int, vector<ofxOMXPlayer*> > omxPlayers;
+	vector<ofxOMXPlayer*> omxPlayers;
 	vector<int> key;
 	void onCharacterReceived(KeyListenerEventData& e);
 	TerminalListener consoleListener;
 
 
     float  totalDuration;
-    int  startTime;
-    int  endTime;
+    vector<int> startTime;
+    vector<int>  endTime;
     int  totalScreens;
     int  fade;
     int  index;
     int  filmIndex;
     float  pos;
     
-    int     startFrame;
-    int     currentFrame;
-    int     endFrame;
-    
+    vector<int>     startFrame;
+    vector<int>     endFrame;
+    int     pfilmIndex;
+    int     nextIndex;
     int     screenOffSet;
     int     screenIndex;
     int     port;
     bool    doSeek;
     bool    doFade;
+    bool    doLoopFade;
     bool    fadeUp;
     bool    seeking;
-
+    bool    newMovie;
     ofFbo ping;
     ofFbo pong;
 };
