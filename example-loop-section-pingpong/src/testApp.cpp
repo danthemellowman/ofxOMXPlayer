@@ -36,7 +36,7 @@ void testApp::setup()
 	       int serverport = XML.getValue("settings:server:port", 7777);
 	       string ipAddr = XML.getValue("settings:server:address", "192.168.2.255");
 	       server->init(ipAddr, port, serverport);
-	       screenIndex = 0;
+	       screenIndex = XML.getValue("settings:screenIndex", 0);
 	   }
 	}else{
 		if(!isServer){
