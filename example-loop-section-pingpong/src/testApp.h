@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxOMXPlayer.h"
 #include "TerminalListener.h"
+#include "ofxOSCSync.h"
 
 class testApp : public ofBaseApp, public KeyListener{
 
@@ -41,6 +42,14 @@ public:
     bool    seeking;
     bool    newMovie;
     ofFbo ping;
-    ofFbo pong;
+
+    bool debug;
+
+    bool    isServer;
+    void    newData( DataPacket& _packet  );
+
+    ofxCommonTimeOSC*       commonTimeOsc;
+    ofxClientOSCManager*   client;
+    ofxServerOscManager*   server;
 };
 

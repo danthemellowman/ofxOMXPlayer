@@ -7,30 +7,64 @@ void testApp::setup()
 	// ofSetFrameRate(60.0);
 	ofSetLogLevel(OF_LOG_SILENT);
 	// ofSetLogLevel("ofThread", OF_LOG_ERROR);
+
+	isServer = false;
+
+	ofxXmlSettings XML;
+    bool loadedFile = XML.loadFile("settings.xml");
+    
+    if(loadedFile){
+    	// string systemCall = XML.getValue("settings:smbString", "");
+    	// if(systemCall != ""){
+    	// 	system(systemCall.c_str());
+    	// }
+    	isServer = XML.getValue("settings:isServer", 0)==1?true:false;
+    	totalScreens = XML.getValue("settings:totalScreens", 20);
+	   if(!isServer){
+	       screenIndex = XML.getValue("settings:screenIndex", 0);
+	       port = XML.getValue("settings:client:port", 7778);
+	       client = new ofxClientOSCManager();
+	       client->init(screenIndex, port);
+	       
+	       commonTimeOsc = client->getCommonTimeOscObj();
+	       commonTimeOsc->setEaseOffset( true );
+	       
+	       ofAddListener(client->newDataEvent, this, &testApp::newData);
+	   }else{
+	       server = new ofxServerOscManager();
+	       port = XML.getValue("settings:client:port", 7778);
+	       int serverport = XML.getValue("settings:server:port", 7777);
+	       string ipAddr = XML.getValue("settings:server:address", "192.168.2.255");
+	       server->init(ipAddr, port, serverport);
+	       screenIndex = 0;
+	   }
+	}else{
+		if(!isServer){
+	       screenIndex = 0;
+	       port = 7778;
+	       client = new ofxClientOSCManager();
+	       client->init( screenIndex, port);
+	       
+	       commonTimeOsc = client->getCommonTimeOscObj();
+	       commonTimeOsc->setEaseOffset( true );
+	       
+	       ofAddListener(client->newDataEvent, this, &testApp::newData);
+	   }else{
+	       server = new ofxServerOscManager();
+	       server->init("127.0.0.1", 7778, 7777);
+	   }
+	}
 	ofBackground(0, 0, 0);
 	ofHideCursor();
 	string videoPath;
-	//omxPlayers.resize(2);
-	//for(int h = 0; h < omxPlayers.size(); h++){
-	for(int i = 0; i < 4 ; i++){
-		//if(i%2==0){
-			videoPath = ofToDataPath("../../../video/video.mp4", true);
-		//}else{
-		//	videoPath = ofToDataPath("../../../video/Timecoded_Big_bunny_1.mov", true);
-		//}
+	for(int i = 0; i < 5; i++){
+		videoPath = ofToDataPath("../../../video/video"+ofToString(i)+".mp4", true);
 		ofxOMXPlayerSettings settings;
 		settings.videoPath = videoPath;
 		settings.useHDMIForAudio	= true;		//default true
 		settings.enableTexture		= true;		//default true
 		settings.enableLooping		= true;		//default true
 		settings.enableAudio		= false;		//default true, save resources by disabling
-		// if (!settings.enableTexture) 
-		// {
-		// 	settings.displayRect.width = 480;
-		// 	settings.displayRect.height = 300;
-		// 	settings.displayRect.x = 0;
-		// 	settings.displayRect.y = 0;
-		// }
 		ofxOMXPlayer* player = new ofxOMXPlayer();
 		player->setup(settings);
 		omxPlayers.push_back(player);
@@ -43,8 +77,6 @@ void testApp::setup()
 	//}
 	filmIndex = 0;
 	nextIndex = 1;
-	totalScreens = 200;
-	screenIndex = 0;
 	fade = 0;
 	doSeek = true;
     doFade = true;
@@ -54,15 +86,12 @@ void testApp::setup()
 
 
     ping.allocate(480, 272, GL_RGBA);
-    pong.allocate(480, 272, GL_RGBA);
 
     ping.begin();
     ofClear(0, 0, 0, 0);
     ping.end();
 
-    pong.begin();
-    ofClear(0, 0, 0, 0);
-    pong.end();
+    debug = false;
 }
 
 
@@ -73,7 +102,7 @@ void testApp::update()
 	if(doSeek){
 		for(int i = 0; i < omxPlayers.size(); i++){
 			totalDuration = (omxPlayers[i]->getTotalNumFrames())/totalScreens;
-			startFrame[i] = totalDuration*(i);
+			startFrame[i] = totalDuration*(screenIndex);
 			endFrame[i] = startFrame[i]+(totalDuration);
 			startTime[i] = startFrame[i]/30.0;
 			endTime[i] = endFrame[i]/30.0;
@@ -88,8 +117,13 @@ void testApp::update()
 	}else{
 
 		if(omxPlayers[filmIndex]->getCurrentFrame() >= endFrame[filmIndex]-60 && !doFade){
-	    	doFade = true;
-	    	fadeUp = false;
+	    	if(isServer){
+	    		doFade = true;
+	    		DataPacket p;
+	    		p.valuesString.push_back("nextVideo");
+	    		server->sendData(p);
+	    		keyPressed('=');
+	    	}
 	    }
 	    if(omxPlayers[filmIndex]->getCurrentFrame() >= endFrame[filmIndex]){
 	    	if(omxPlayers[filmIndex]->isFrameNew()){
@@ -120,7 +154,7 @@ void testApp::update()
 				fade = 0;
 			}
 		}else{
-			fade+=255/100;
+			fade+=255/60;
 			if(fade >= 255)
 			{
 				doFade = false;
@@ -189,10 +223,16 @@ void testApp::draw()
 	// 	ofPopStyle();
 	// }
 
-	ofDrawBitmapStringHighlight("film index:"+ofToString(filmIndex)+" doFade: "+ofToString(doFade)+" fadeUp: "+ofToString(fadeUp), 60, 30, ofColor(ofColor::black, 90), ofColor::yellow);
-	ofDrawBitmapStringHighlight("startFrame: "+ofToString(startFrame[filmIndex])+" endFrame: "+ofToString(endFrame[filmIndex]), 60, 60, ofColor(ofColor::black, 90), ofColor::yellow);
-	ofDrawBitmapStringHighlight("current Frame "+ofToString(omxPlayers[filmIndex]->getCurrentFrame()), 60, 90, ofColor(ofColor::black, 90), ofColor::yellow);
-	ofDisableAlphaBlending();
+	if(debug){
+		ofDrawBitmapStringHighlight("film index:"+ofToString(filmIndex)+" doFade: "+ofToString(doFade)+" fadeUp: "+ofToString(fadeUp), 60, 30, ofColor(ofColor::black, 90), ofColor::yellow);
+		ofDrawBitmapStringHighlight("startFrame: "+ofToString(startFrame[filmIndex])+" endFrame: "+ofToString(endFrame[filmIndex]), 60, 60, ofColor(ofColor::black, 90), ofColor::yellow);
+		ofDrawBitmapStringHighlight("current Frame "+ofToString(omxPlayers[filmIndex]->getCurrentFrame()), 60, 90, ofColor(ofColor::black, 90), ofColor::yellow);
+		ofDisableAlphaBlending();
+	}
+}
+
+void testApp::newData( DataPacket& _packet  ){
+  	keyPressed('=');
 }
 
 void testApp::keyPressed(int key)
@@ -211,16 +251,10 @@ void testApp::keyPressed(int key)
     	fadeUp = false;
 
     }
-    if (key == '-') 
-	{
-    	nextIndex = filmIndex-1;
-    	if(nextIndex <=0){
-    		nextIndex = omxPlayers.size()-1;
-    	}
-    	newMovie = true;
-    	doFade = true;
-    	fadeUp = false;
-	}
+
+    if(key == 'd'){
+    	debug = !debug;
+    }
 }
 
 void testApp::onCharacterReceived(KeyListenerEventData& e)
